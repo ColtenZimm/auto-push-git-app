@@ -10,7 +10,10 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/node /opt/auto-push-git-app/src/cli.ts run
+# Single executable (no Node needed):
+ExecStart=/opt/autopush/autopush-linux-x64 run
+# ...or from a source checkout (needs Node 22.18+):
+# ExecStart=/usr/bin/node /opt/auto-push-git-app/src/cli.ts run
 Restart=on-failure
 RestartSec=10
 # Forgejo token for PR creation (simple mode): either export FORGEJO_TOKEN for this unit

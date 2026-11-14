@@ -4,6 +4,7 @@
   "scanSecrets": true,
   "maxFileBytes": 5242880,
   "snoozeMinutes": [15, 60, 240],
+  "pauseMinutes": [60, 240],
   "forgejo": {
     "url": "https://git.corp.example",
     "tokenEnv": "FORGEJO_TOKEN",

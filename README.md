@@ -17,20 +17,56 @@ setup keeps working. The app never sees or stores a password.
 
 ## Requirements
 
-- Node.js **22.18+** (runs the TypeScript sources directly; no build step)
 - `git` on `PATH`
 - Microsoft Edge or Chrome/Chromium for the popup window (falls back to the default browser)
+- **Either** the prebuilt single executable (no Node needed, see below) **or** Node.js **22.18+** to run from source
+- Tray icon, optional: nothing extra on Windows. On Linux, `python3-gi`, `gir1.2-gtk-3.0` and `gir1.2-ayatanaappindicator3-0.1` (GNOME also needs the "AppIndicator and KStatusNotifierItem Support" extension). Without them the app runs fine, just without a tray icon.
 
 ## Quick start
 
 ```bash
-npm install            # dev tooling only (typescript, @types/node)
-npm test               # 29 tests, real git repos + a bare remote
+npm install            # dev tooling only (typescript, esbuild, postject)
+npm test               # real git repos, bare remotes, tray helper round-trips
 node src/cli.ts status --repo /path/to/repo
 node src/cli.ts run --repo /path/to/repo
 ```
 
 Edit a file in that repo, wait ~5 seconds, and the popup appears.
+
+## Tray icon
+
+A small icon in the notification area shows the state at a glance and lets
+people control reminders without opening anything:
+
+| Icon | Meaning |
+|---|---|
+| green check | everything saved |
+| orange `!` | uncommitted changes waiting (tooltip says how many repos) |
+| grey pause | reminders paused until the time shown |
+
+Left-click opens the window. The right-click menu has **Open window**, **Check
+for changes now**, **Pause for 1 hour / 4 hours**, **Resume reminders**, **Open
+audit log folder** and **Quit**.
+
+- Pausing is **time-boxed** and audited; there is no "pause forever". IT sets the choices with `pauseMinutes` (default `[60, 240]`; `[]` removes pausing). The engine re-checks every tray request, so only configured durations are honoured.
+- The icon runs in a tiny helper process (PowerShell/WinForms on Windows, Python/GTK AppIndicator on Linux) so the engine has no native dependencies. The helper exits as soon as the engine does.
+- If the helper cannot start (no desktop session, missing GTK bindings), the app logs a line and keeps working with popups only. `--no-tray` or `"ui": {"tray": false}` turns it off.
+
+## Single executable (no Node required)
+
+```bash
+npm run build:exe                      # -> dist/autopush-<os>-<arch>[.exe], ~83 MB
+npm run smoke:exe -- dist/autopush-win-x64.exe
+```
+
+Uses Node's built-in single-executable support: the code is bundled with
+esbuild and the popup and tray scripts are embedded, so one file is all you
+deploy. Build on the OS you ship for (CI builds Linux and Windows and uploads
+both as artifacts). `autopush version` prints the version.
+
+- **Sign it.** Injecting the app invalidates the Microsoft signature on the embedded `node.exe`. Sign the result with your internal code-signing certificate before distribution, or EDR/SmartScreen will flag it.
+- The tray helper script is extracted on first run to `%LOCALAPPDATA%\autopush\bin` (Windows) or `~/.local/state/autopush/bin` (Linux) and refreshed when the app is updated.
+- Updating means replacing one file through your deployment tool.
 
 ## How it works
 
@@ -97,6 +133,8 @@ and run `node src/cli.ts check-config` to print the effective result.
 | `debounceMs` | `5000` | Quiet period after the last file event |
 | `pollIntervalMs` | `60000` | Fallback status poll |
 | `snoozeMinutes` | `[15,60,240]` | Choices offered in the popup |
+| `pauseMinutes` | `[60,240]` | Pause durations in the tray menu (`[]` = no pausing) |
+| `ui.tray` | `true` | Show the tray icon |
 | `protectedBranches` | `main, master, release/*, prod, production` | Globs; never committed to or pushed directly |
 | `simpleBranchPrefix` | `users` | Prefix for simple-mode branches |
 | `maxFileBytes` | `5242880` | Larger files are refused |
@@ -130,8 +168,8 @@ network shares rely on the poll timer rather than file events.
 
 ## Known limitations / next steps
 
-- **No tray icon yet.** The popup is a standalone app window, and the service runs headless. A thin Tauri or Avalonia shell (tray, pause toggle, native toast) can sit in front of this engine without changing it.
-- Requires Node on each machine. Package as a single executable (`node --experimental-sea-config` / Node SEA) or ship a pinned Node with your installer if you cannot assume it.
+- **Linux tray and executable are untested on real desktops.** The Windows tray helper is tested end to end; the Linux (GTK AppIndicator) helper is only syntax-checked locally, and the Linux executable is built and smoke-tested by CI but not by a person on a desktop. Try them on your distros and desktop environments (GNOME, KDE, Xfce) during the pilot.
+- The tray shows status and pause only. There are no native toast notifications; the popup window is the notification.
 - Installer scripts (systemd unit, Windows scheduled task) are provided but have **not been exercised on a real fleet**; test them on a pilot group first.
 - CI (typecheck + tests on Linux and Windows) runs from `.github/workflows/ci.yml` on GitHub. If you move to Forgejo, adapt it under `.forgejo/workflows/`.
 - Secret scanning is pattern based. Run a server-side scanner (e.g. gitleaks in Forgejo Actions) as well.
