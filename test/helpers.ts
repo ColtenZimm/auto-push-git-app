@@ -18,7 +18,8 @@ export function tmp(prefix = 'ap-'): string {
 }
 
 export function cleanup(...dirs: string[]): void {
-  for (const d of dirs) rmSync(d, { recursive: true, force: true });
+  // Windows may briefly hold directory handles after a watcher closes; retry instead of failing the test.
+  for (const d of dirs) rmSync(d, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 }
 
 export function write(root: string, rel: string, content: string): void {

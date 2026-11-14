@@ -33,6 +33,8 @@ export class RepoMonitor extends EventEmitter<{ prompt: [PromptSnapshot]; cleare
   private watcher: FSWatcher | null = null;
   private checking = false;
   private recheck = false;
+  private stopped = false;
+  private inflight: Promise<void> | null = null;
   private snoozedUntil = 0;
   private paused = false;
   private dismissedFingerprint: string | null = null;
@@ -64,16 +66,20 @@ export class RepoMonitor extends EventEmitter<{ prompt: [PromptSnapshot]; cleare
     this.trigger();
   }
 
-  stop(): void {
+  /** Stop watching and wait for any in-flight git call, so nothing touches the repo afterwards. */
+  async stop(): Promise<void> {
+    this.stopped = true;
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     if (this.pollTimer) clearInterval(this.pollTimer);
     this.debounceTimer = this.pollTimer = null;
     this.watcher?.close();
     this.watcher = null;
+    await this.inflight;
   }
 
   /** Called on every file event / poll tick; collapses bursts into one check. */
   trigger(): void {
+    if (this.stopped) return;
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       this.debounceTimer = null;
@@ -119,6 +125,12 @@ export class RepoMonitor extends EventEmitter<{ prompt: [PromptSnapshot]; cleare
       return;
     }
     this.checking = true;
+    const done = this.evaluate();
+    this.inflight = done;
+    await done;
+  }
+
+  private async evaluate(): Promise<void> {
     try {
       const status = await this.deps.getStatus();
       const files = status.files;

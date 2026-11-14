@@ -14,7 +14,7 @@ function mk(now?: () => number) {
   const prompts: PromptSnapshot[] = [];
   mon.on('prompt', (p) => prompts.push(p));
   mon.on('error', () => {});
-  return { ...fx, cfg, mon, prompts, dispose: () => { mon.stop(); fx.dispose(); cleanup(cfg.auditLogPath.replace(/audit\.jsonl$/, '')); } };
+  return { ...fx, cfg, mon, prompts, dispose: async () => { await mon.stop(); fx.dispose(); cleanup(cfg.auditLogPath.replace(/audit\.jsonl$/, '')); } };
 }
 
 test('no prompt for a clean repo; one prompt per batch of changes', async () => {
@@ -34,7 +34,7 @@ test('no prompt for a clean repo; one prompt per batch of changes', async () => 
     assert.equal(m.prompts.length, 1);
     assert.equal(m.mon.pending?.files.length, 2);
   } finally {
-    m.dispose();
+    await m.dispose();
   }
 });
 
@@ -50,7 +50,7 @@ test('dismiss stays quiet until the changes differ', async () => {
     await m.mon.check();
     assert.equal(m.prompts.length, 2);
   } finally {
-    m.dispose();
+    await m.dispose();
   }
 });
 
@@ -70,7 +70,7 @@ test('snooze suppresses prompts until it expires', async () => {
     await m.mon.check();
     assert.equal(m.prompts.length, 2);
   } finally {
-    m.dispose();
+    await m.dispose();
   }
 });
 
@@ -89,7 +89,7 @@ test('pause suppresses; completed() resets state and re-checks', async () => {
     await cleared;
     assert.equal(m.mon.pending, null);
   } finally {
-    m.dispose();
+    await m.dispose();
   }
 });
 
@@ -103,6 +103,6 @@ test('real file watcher triggers a prompt after the debounce; ignored dirs do no
     const [p] = (await Promise.race([got, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))])) as [PromptSnapshot];
     assert.ok(p.files.some((f) => f.path === 'real.txt'));
   } finally {
-    m.dispose();
+    await m.dispose();
   }
 });
