@@ -133,6 +133,6 @@ network shares rely on the poll timer rather than file events.
 - **No tray icon yet.** The popup is a standalone app window, and the service runs headless. A thin Tauri or Avalonia shell (tray, pause toggle, native toast) can sit in front of this engine without changing it.
 - Requires Node on each machine. Package as a single executable (`node --experimental-sea-config` / Node SEA) or ship a pinned Node with your installer if you cannot assume it.
 - Installer scripts (systemd unit, Windows scheduled task) are provided but have **not been exercised on a real fleet**; test them on a pilot group first.
-- **CI is not active yet.** The workflow lives at `packaging/ci/github-actions-ci.yml` because the token used to push this repo lacked GitHub's `workflow` scope. Copy it to `.github/workflows/ci.yml` (or adapt it to Forgejo Actions under `.forgejo/workflows/`) to enable typecheck + tests on Linux and Windows.
+- CI (typecheck + tests on Linux and Windows) runs from `.github/workflows/ci.yml` on GitHub. If you move to Forgejo, adapt it under `.forgejo/workflows/`.
 - Secret scanning is pattern based. Run a server-side scanner (e.g. gitleaks in Forgejo Actions) as well.
 - Popup is English only.
