@@ -17,6 +17,13 @@ function tryLaunch(cmd: string, args: string[]): Promise<boolean> {
   });
 }
 
+/** Open a file or folder with the desktop's default handler (used for "Open audit log folder"). */
+export function openPath(path: string, platform = process.platform): Promise<boolean> {
+  if (platform === 'win32') return tryLaunch('explorer.exe', [path]);
+  if (platform === 'darwin') return tryLaunch('open', [path]);
+  return tryLaunch('xdg-open', [path]);
+}
+
 /**
  * Open the popup as a chromeless "app window" using the system's Edge/Chrome
  * (no bundled browser needed), falling back to the default browser.

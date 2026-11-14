@@ -19,6 +19,8 @@ export interface Config {
   debounceMs: number;
   pollIntervalMs: number;
   snoozeMinutes: number[];
+  /** Pause durations offered in the tray menu. There is deliberately no "pause forever". */
+  pauseMinutes: number[];
   protectedBranches: string[];
   simpleBranchPrefix: string;
   maxFileBytes: number;
@@ -27,7 +29,7 @@ export interface Config {
   auditLogPath: string;
   gitBinary: string;
   ignoreDirs: string[];
-  ui: { port: number; openPopup: boolean };
+  ui: { port: number; openPopup: boolean; tray: boolean };
 }
 
 export type ChangeKind = 'added' | 'modified' | 'deleted' | 'renamed' | 'untracked' | 'conflict';
