@@ -1,0 +1,24 @@
+{
+  "name": "auto-push-git-app",
+  "version": "0.1.0",
+  "description": "On-prem commit/push reminder daemon: watches repos, prompts users to commit and share work, enforces branch and secret policy, opens Forgejo PRs.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=22.18"
+  },
+  "bin": {
+    "autopush": "./src/cli.ts"
+  },
+  "scripts": {
+    "start": "node src/cli.ts run",
+    "check-config": "node src/cli.ts check-config",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
