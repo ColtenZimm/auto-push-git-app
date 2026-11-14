@@ -1,0 +1,12 @@
+{
+  "mode": "developer",
+  "protectedBranches": ["main", "master", "release/*", "prod", "production", "hotfix/*"],
+  "scanSecrets": true,
+  "maxFileBytes": 5242880,
+  "snoozeMinutes": [15, 60, 240],
+  "forgejo": {
+    "url": "https://git.corp.example",
+    "tokenEnv": "FORGEJO_TOKEN",
+    "autoPullRequest": true
+  }
+}
