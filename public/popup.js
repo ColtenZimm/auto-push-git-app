@@ -127,6 +127,19 @@ function showResult(id, kind, text, url) {
   c.el.append(box);
 }
 
+// The card disappears once its changes are saved, so keep the outcome visible in a banner.
+const bannerEl = document.getElementById('banner');
+let bannerTimer = null;
+function showBanner(text, url) {
+  bannerEl.replaceChildren(h('span', { text }));
+  if (url && /^https?:\/\//.test(url)) {
+    bannerEl.append(document.createTextNode(' '), h('a', { href: url, target: '_blank', rel: 'noopener noreferrer', text: 'View pull request' }));
+  }
+  bannerEl.classList.remove('hidden');
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => bannerEl.classList.add('hidden'), 30000);
+}
+
 async function commit(id, push) {
   const c = cards.get(id);
   if (!c || c.state.busy) return;
@@ -143,6 +156,7 @@ async function commit(id, push) {
   c.state.busy = false;
   if (r.ok) {
     showResult(id, 'ok', r.message, r.pullRequestUrl);
+    showBanner(r.message, r.pullRequestUrl);
     c.el.querySelector('textarea').value = '';
     setTimeout(refresh, 800);
   } else {

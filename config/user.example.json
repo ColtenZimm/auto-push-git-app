@@ -1,0 +1,4 @@
+{
+  "repos": ["/home/jsmith/work/payments-api", "/home/jsmith/work/ledger-docs"],
+  "debounceMs": 5000
+}

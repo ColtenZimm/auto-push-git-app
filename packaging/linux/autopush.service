@@ -1,0 +1,22 @@
+# Install per user:
+#   mkdir -p ~/.config/systemd/user && cp autopush.service ~/.config/systemd/user/
+#   (edit ExecStart paths if needed)
+#   systemctl --user daemon-reload && systemctl --user enable --now autopush
+# Logs: journalctl --user -u autopush -f
+[Unit]
+Description=auto-push-git-app commit/push reminders
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/auto-push-git-app/src/cli.ts run
+Restart=on-failure
+RestartSec=10
+# Forgejo token for PR creation (simple mode): either export FORGEJO_TOKEN for this unit
+# (EnvironmentFile=%h/.config/autopush/env, chmod 600) or set "forgejo.tokenFile" in the config.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=graphical-session.target
