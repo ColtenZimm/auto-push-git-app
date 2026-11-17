@@ -44,7 +44,7 @@ async function boot(overrides: Record<string, unknown> = {}) {
   const fx = makeRepoWithRemote();
   const cfg = testConfig({ repos: [fx.work], debounceMs: 20, pollIntervalMs: 60_000, ...overrides });
   const opened: string[] = [];
-  const app = await startApp(cfg, { log: () => {}, opener: async (u) => (opened.push(u), true) });
+  const app = await startApp(cfg, { log: () => {}, opener: async (u) => (opened.push(u), true), trayHelper: null });
   return {
     ...fx,
     app,

@@ -15,10 +15,14 @@
     "start": "node src/cli.ts run",
     "check-config": "node src/cli.ts check-config",
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:exe": "node scripts/build-sea.mjs",
+    "smoke:exe": "node scripts/smoke-exe.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "esbuild": "^0.28.2",
+    "postject": "^1.0.0-alpha.6",
     "typescript": "^5.7.0"
   }
 }

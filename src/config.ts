@@ -9,6 +9,7 @@ export const DEFAULTS: Config = {
   debounceMs: 5000,
   pollIntervalMs: 60_000,
   snoozeMinutes: [15, 60, 240],
+  pauseMinutes: [60, 240],
   protectedBranches: ['main', 'master', 'release/*', 'prod', 'production'],
   simpleBranchPrefix: 'users',
   maxFileBytes: 5 * 1024 * 1024,
@@ -16,7 +17,7 @@ export const DEFAULTS: Config = {
   auditLogPath: '',
   gitBinary: 'git',
   ignoreDirs: ['.git', 'node_modules', '.venv', 'target', 'dist', 'build', '__pycache__'],
-  ui: { port: 0, openPopup: true },
+  ui: { port: 0, openPopup: true, tray: true },
 };
 
 export class ConfigError extends Error {}
@@ -129,12 +130,18 @@ export function validateConfig(raw: Record<string, unknown>): Config {
   if (snooze.length === 0) throw new ConfigError('"snoozeMinutes" must be a non-empty array of integers');
   const snoozeMinutes = snooze.map((m, i) => expectInt(`snoozeMinutes[${i}]`, m, 1, 7 * 24 * 60));
 
+  // Empty is allowed: IT can remove pausing from the tray menu entirely.
+  const pause = (Array.isArray(raw.pauseMinutes) ? raw.pauseMinutes : null) as unknown[] | null;
+  if (!pause) throw new ConfigError('"pauseMinutes" must be an array of integers (may be empty)');
+  const pauseMinutes = pause.map((m, i) => expectInt(`pauseMinutes[${i}]`, m, 1, 24 * 60));
+
   return {
     repos: expectStringArray('repos', raw.repos).map((p) => resolve(p)),
     mode: mode as Mode,
     debounceMs: expectInt('debounceMs', raw.debounceMs, 0, 600_000),
     pollIntervalMs: expectInt('pollIntervalMs', raw.pollIntervalMs, 1000, 86_400_000),
     snoozeMinutes,
+    pauseMinutes,
     protectedBranches: expectStringArray('protectedBranches', raw.protectedBranches),
     simpleBranchPrefix: raw.simpleBranchPrefix.replace(/^\/+|\/+$/g, ''),
     maxFileBytes: expectInt('maxFileBytes', raw.maxFileBytes, 1024),
@@ -146,6 +153,7 @@ export function validateConfig(raw: Record<string, unknown>): Config {
     ui: {
       port: expectInt('ui.port', ui.port, 0, 65535),
       openPopup: expectBool('ui.openPopup', ui.openPopup),
+      tray: expectBool('ui.tray', ui.tray),
     },
   };
 }

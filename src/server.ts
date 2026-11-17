@@ -1,14 +1,11 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readAsset } from './assets.ts';
 import type { RepoMonitor } from './monitor.ts';
 import type { CommitService } from './service.ts';
 import type { Config, PromptSnapshot } from './types.ts';
 
-const PUBLIC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const MAX_BODY = 256 * 1024;
 
 const STATIC: Record<string, { file: string; type: string }> = {
@@ -43,7 +40,7 @@ export async function startUiServer(
   let lastSeen = 0;
   let port = 0;
   const staticCache = new Map<string, Buffer>();
-  for (const [route, s] of Object.entries(STATIC)) staticCache.set(route, readFileSync(join(PUBLIC_DIR, s.file)));
+  for (const [route, s] of Object.entries(STATIC)) staticCache.set(route, readAsset(`public/${s.file}`));
 
   const hostOk = (h: string | undefined) => h === `127.0.0.1:${port}` || h === `localhost:${port}`;
   const originOk = (o: string | undefined) => o === undefined || o === `http://127.0.0.1:${port}` || o === `http://localhost:${port}`;
